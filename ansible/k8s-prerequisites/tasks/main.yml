@@ -1,0 +1,9 @@
+---
+# tasks file for k8s-prerequisites
+- include: configure-firewall.yml
+- include: disable-swap-selinux.yml
+- include: install-tools.yml
+- include: configure-hostnames.yml
+
+
+

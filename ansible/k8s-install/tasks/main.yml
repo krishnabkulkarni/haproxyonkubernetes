@@ -1,0 +1,12 @@
+---
+#tasks file for k8s-install
+- include: generate_token.yml
+- include: configure_cri.yml
+- include: initialise_master_join_workers.yml
+- include: deploy_webapp.yml
+- include: deploy_haproxy.yml
+- include: deploy_kube_metrics.yml
+
+  
+
+

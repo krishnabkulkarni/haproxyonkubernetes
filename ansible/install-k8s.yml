@@ -1,0 +1,15 @@
+---
+- hosts: master, worker
+  gather_facts: yes
+  remote_user: centos
+  become: yes
+
+  vars:
+    ansible_ssh_private_key_file: "{{ playbook_dir}}/id_rsa"
+    master_node: "{{ k8s_master_ip }}"
+    
+  tasks:
+  - include_role:
+      name: k8s-prerequisites
+  - include_role:
+      name: k8s-install

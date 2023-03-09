@@ -1,0 +1,96 @@
+---
+- name: Configure crio.conf
+  copy:
+    dest: /etc/modules-load.d/crio.conf
+    content: |
+       overlay
+       br_netfilter
+
+- name: configure kernel params
+  copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables  = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.ipv4.ip_forward                 = 1
+- name: configure ipv4 kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "overlay"
+    - "br_netfilter"
+
+- name: apply kernel params config without system reboot
+  shell: sysctl --system
+
+- name: Add docker-ce repo
+  template:
+    src: docker-ce.repo.j2
+    dest: /etc/yum.repos.d/docker-ce.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install docker-ce with dependencies
+  yum:
+    name: "docker-ce-23.0.1-1.el8"
+    state: present
+    update_cache: true
+    install_weak_deps: true
+
+- name: Create /etc/docker dir
+  file:
+    path: "/etc/docker"
+    state: directory
+
+- name: "Configure docker - cgroup"
+  template:
+    src: "daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+    owner: root
+    group: root
+    mode: 0755
+    
+- name: Start Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: Add kubernetes.repo to all nodes
+  yum_repository:
+    name: Kubernetes
+    description: "Yum repo for Kubernetes packages"
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-$basearch
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+    exclude: kubelet kubeadm kubectl
+
+- name: install kubeadm, kubelet and kubectl tools
+  yum:
+    name:
+      - "kubelet"
+      - "kubeadm"
+      - "kubectl"
+    state: present
+    disable_excludes: all
+    update_cache: true
+
+- name: Enable kubelet
+  systemd:
+    name: kubelet
+    enabled: true
+    daemon_reload: true
+
+
+    
+    
+
+
+
+
+
+    

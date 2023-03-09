@@ -1,0 +1,28 @@
+---
+- name: Copy haproxy ingress controller manifest on master
+  template:
+      src: haproxy_ingress_controller.yml.j2
+      dest: "/home/{{ ansible_user }}/haproxy_ingress_controller.yml"
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: 0644
+  when: "'master' in group_names"
+
+- name: Copy haproxy ingress resource manifest on master
+  template:
+      src: haproxy_ingress_resource.yml.j2
+      dest: "/home/{{ ansible_user }}/haproxy_ingress_resource.yml"
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: 0644
+  when: "'master' in group_names"
+
+- name: Deploy HAProxy Ingress controller
+  shell: "kubectl apply -f /home/{{ ansible_user }}/haproxy_ingress_controller.yml"
+  
+- name: pause for 20 seconds
+  pause:
+    seconds: 20
+
+- name: Deploy HAProxy Ingress
+  shell: "kubectl apply -f haproxy_ingress_resource.yml"

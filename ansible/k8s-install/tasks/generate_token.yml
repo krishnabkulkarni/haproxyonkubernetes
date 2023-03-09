@@ -1,0 +1,27 @@
+---
+- name: generate token using kubeadm cmdlne
+  shell: kubeadm token generate
+  register: token
+  no_log: true
+  when: "'master' in group_names"
+
+- name: copy token file on master
+  template:
+    src: "{{ playbook_dir }}/k8s-install/templates/token.j2"
+    dest: /tmp/token
+    mode: 755
+  when: "'master' in group_names"
+
+# - name: Fetch the file from the master to ansible-controller host
+#   run_once: yes
+#   fetch:
+#     src: /tmp/token
+#     dest: "{{ playbook_dir }}/token"
+#     flat: yes
+#   when: "'master' in group_names"
+
+# - name: Copy the file from ansible-controller host to workers
+#   copy:
+#     src: "{{ playbook_dir }}/token"
+#     dest: /tmp/token
+#   when: "'worker' in group_names"

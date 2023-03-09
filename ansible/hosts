@@ -1,0 +1,5 @@
+[master]
+34.228.161.66 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+[worker]
+34.229.244.185 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+54.80.148.15 ansible_ssh_common_args='-o StrictHostKeyChecking=no'

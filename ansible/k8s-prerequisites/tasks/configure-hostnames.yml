@@ -1,0 +1,43 @@
+- name: make host entries for master node
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ k8s_master_ip }} masternode.haproxypoc.local masternode" 
+  
+
+- name: make host entries for worker1 node
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ worker1_private_ip }} workernode1.haproxypoc.local workernode1"
+  
+
+- name: make host entries for worker2 node
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ worker2_private_ip }} workernode2.haproxypoc.local workernode2"
+  
+
+- name: set hostname for master
+  replace:
+    path: /etc/hostname
+    regexp: '.*'
+    replace: "masternode.haproxypoc.local"
+  when: "'master' in group_names"
+
+- name: set hostname for worker1
+  replace:
+    path: /etc/hostname
+    regexp: '.*'
+    replace: "workernode1.haproxypoc.local"
+  when: "'worker' in group_names"
+  
+- name: set hostname for worker2
+  replace:
+    path: /etc/hostname
+    regexp: '.*'
+    replace: "workernode2.haproxypoc.local"
+  when: "'worker' in group_names"
+
+- name: set hostname for cluster nodes
+  shell: "hostname --file /etc/hostname"
+  
+      

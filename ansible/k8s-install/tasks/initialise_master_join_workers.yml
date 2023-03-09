@@ -1,0 +1,76 @@
+---
+- name: Initialise master node
+  shell: |
+    kubeadm init --token {{ token.stdout }} \
+                 --kubernetes-version {{ kubernetes_version }} \
+                 --pod-network-cidr {{ pod_network_cidr }} \
+                 --apiserver-advertise-address {{ master_node_ip }}
+  register: init_master_node
+  when: "'master' in group_names"
+
+- name: Create direcory to hold kubeconfig
+  file:
+    path: "/home/{{ ansible_user }}/.kube/"
+    state: directory
+    owner: centos
+    group: centos
+    mode: 0755
+
+- name: Copy admin.conf to Home directory
+  copy:
+    src: "/etc/kubernetes/admin.conf"
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when: "'master' in group_names and init_master_node is succeeded"
+
+- name: Copy calico yaml on master
+  template:
+    src: calico.yml.j2
+    dest: "/home/{{ ansible_user }}/calico.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0644
+  when: "'master' in group_names"
+
+- name: export kubeconfig for root
+  become: yes
+  shell: export KUBECONFIG=etc/kubernetes/admin.conf
+
+- name: deploy calico in cluster
+  become_user: centos
+  shell: "kubectl apply -f calico.yaml"
+  when: "'master' in group_names"
+
+- name: pause the playbook execution for 30 seconds for calico pods to be Running
+  pause:
+    seconds: 30
+
+- name: Regenerate master token
+  shell: "kubeadm token create {{ token.stdout }}"
+  when: "'master' in group_names"
+
+- name: "get token"
+  when: "inventory_hostname == groups['master'][0]"
+  shell: "cat /tmp/token"
+  register: token
+
+- name: join worker nodes to k8s cluster
+  shell: |
+     kubeadm join --token {{ hostvars[groups['master'][0]]['token'].stdout }} \
+                  --discovery-token-unsafe-skip-ca-verification \
+                  {{ master_node_ip }}:6443
+  register: join_worker_node_to_cluster
+  when: "'worker' in group_names"
+
+- name: Start kubelet service
+  systemd:
+    name: kubelet
+    daemon_reload: yes
+    state: restarted
+
+- name: Label worker nodes
+  become_user: centos
+  shell: "kubectl label node {{ ansible_hostname }} node-role.kubernetes.io/worker=worker"
+  when: "'worker' in group_names"

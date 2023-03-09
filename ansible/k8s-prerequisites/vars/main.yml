@@ -1,0 +1,4 @@
+---
+# vars file for k8s-prerequisites
+master_ip_range: "{{ master_ips_range }}"
+worker_ip_range: "{{ worker_ips_range }}"

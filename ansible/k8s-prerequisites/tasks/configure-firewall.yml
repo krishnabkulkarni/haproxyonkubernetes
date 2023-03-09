@@ -1,0 +1,56 @@
+---
+- name: Install iptables
+  yum:
+    name: iptables
+    state: present
+    update_cache: true
+
+- name: Open required ports from firewall on master node
+  iptables:
+    jump: ACCEPT
+    chain: INPUT
+    protocol: tcp
+    destination_ports:
+      - "80"
+      - "443"
+      - "22"   
+  when: "'master' in group_names"
+
+- name: Open required ports from firewall on master node for master-worker communication
+  iptables:
+    jump: ACCEPT
+    chain: INPUT
+    protocol: tcp
+    src_range: "{{ worker_ip_range }}"
+    dst_range: "{{ master_ip_range }}"
+    destination_ports:
+      - "6443"
+      - "2379:2380"
+      - "10250"
+      - "10259"
+      - "10257"
+      - "8080"
+  when: "'master' in group_names"
+  
+- name: Open required ports from firewall on worker node
+  iptables:
+    jump: ACCEPT
+    chain: INPUT
+    protocol: tcp
+    destination_ports:
+      - "80"
+      - "443"
+      - "22"   
+  when: "'worker' in group_names"
+
+- name: Open required ports from firewall on worker node for master-worker communication
+  iptables:
+    jump: ACCEPT
+    chain: INPUT
+    protocol: tcp
+    src_range: "{{ master_ip_range }}"
+    dst_range: "{{ worker_ip_range }}"
+    destination_ports:
+      - "30000:32767"
+      - "10250"
+  when: "'worker' in group_names"
