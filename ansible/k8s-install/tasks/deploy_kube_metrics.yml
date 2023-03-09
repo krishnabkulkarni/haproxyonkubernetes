@@ -1,3 +1,5 @@
 ---
 - name: Deploy Metrics server to monitor K8s cluster
+  become_user: centos
   shell: 'kubectl apply -f https://raw.githubusercontent.com/techiescamp/kubeadm-scripts/main/manifests/metrics-server.yaml'
+  when: "'master' in group_names"

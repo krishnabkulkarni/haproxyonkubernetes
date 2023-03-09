@@ -1,5 +1,6 @@
 ---
 - name: Copy webapp yml on master
+  become_user: centos
   template:
       src: apache.yml.j2
       dest: "/home/{{ ansible_user }}/apache.yml"
@@ -9,7 +10,10 @@
   when: "'master' in group_names"
 
 - name: Deploy webapp in cluster
+  become_user: centos
   shell: "kubectl apply -f apache.yml"
+  when: "'master' in group_names"
+
 
 
   

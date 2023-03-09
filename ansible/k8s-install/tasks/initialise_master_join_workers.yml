@@ -73,4 +73,4 @@
 - name: Label worker nodes
   become_user: centos
   shell: "kubectl label node {{ ansible_hostname }} node-role.kubernetes.io/worker=worker"
-  when: "'worker' in group_names"
+  when: "'master' in group_names"
